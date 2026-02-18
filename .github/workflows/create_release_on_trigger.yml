@@ -22,10 +22,10 @@ jobs:
           TAG="v1.0.0-$(date +%s)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # set authenticated remote using token so we can push the tag
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
+          # add authenticated remote using token so we can push the tag
+          git remote add auth-origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
           git tag -a "$TAG" -m "Release $TAG"
-          git push origin "$TAG"
+          git push auth-origin "$TAG"
 
       - name: Create GitHub Release and upload asset
         uses: softprops/action-gh-release@v1
