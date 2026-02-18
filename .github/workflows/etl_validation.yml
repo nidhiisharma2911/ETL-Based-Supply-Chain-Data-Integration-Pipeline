@@ -48,6 +48,15 @@ jobs:
           test -f data/processed/inventory_summary.csv && echo "✓ inventory_summary.csv exists" || echo "✗ Missing inventory_summary.csv"
           test -f data/processed/logistics_kpi.csv && echo "✓ logistics_kpi.csv exists" || echo "✗ Missing logistics_kpi.csv"
 
+      - name: Validate SQLite DB tables
+        run: |
+          if test -f supply_chain.db; then
+            echo "supply_chain.db found, checking required tables"
+            sqlite3 supply_chain.db ".tables" | tr '\n' ' ' | grep -E "fact_sales|inventory_summary|logistics_kpi" || (echo "Required tables missing in supply_chain.db" && exit 1)
+          else
+            echo "supply_chain.db not found in repo root; skipping DB table validation" && exit 1
+          fi
+
       - name: Validate raw data structure
         run: |
           test -f data/raw/sales_raw.csv && echo "✓ sales_raw.csv exists" || echo "✗ Missing sales_raw.csv"
