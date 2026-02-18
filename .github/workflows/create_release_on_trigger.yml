@@ -1,5 +1,8 @@
 name: Create Release on Trigger
 
+permissions:
+  contents: write
+
 on:
   push:
     paths:
@@ -18,7 +21,7 @@ jobs:
 
       - name: Create GitHub Release and upload asset via API
         env:
-          GHTOKEN: ${{ secrets.GH_UPLOAD_TOKEN }}
+          GHTOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
