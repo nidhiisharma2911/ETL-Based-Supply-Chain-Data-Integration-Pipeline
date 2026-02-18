@@ -1,0 +1,7 @@
+This repository cannot contain a real Power BI `.pbix` binary generated here.
+
+If you need `etl_monitoring.pbix`, follow `etl_monitoring_powerbi_spec.md` to build it in Power BI Desktop, then save the report as `etl_monitoring.pbix` and place it in this `dashboard/` folder.
+
+If you want, I can generate:
+- Power Query (M) script snippets for the three CSVs to paste into Power BI's Advanced Editor
+- DAX measures ready to paste into the report
