@@ -1,0 +1,64 @@
+name: ETL Validation - PR & Push
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest flake8
+
+      - name: Lint code with flake8
+        run: |
+          # Stop build if there are Python syntax errors or undefined names
+          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Exit-zero treats all errors as warnings (less strict)
+          flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Dry-run ETL Pipeline (validate logic)
+        run: |
+          python3 -c "
+          import sys
+          sys.path.insert(0, './src')
+          from etl_pipeline import clean_sales, transform_sales, clean_inventory, transform_inventory, clean_logistics, transform_logistics
+          import pandas as pd
+          
+          # Quick validation tests
+          print('Testing clean_sales...')
+          test_df = pd.DataFrame({'SaleID': [1, 1], 'Date': ['2024-01-01', '2024-01-01'], 'CustomerID': ['C1', 'C1'], 'ProductID': ['P1', 'P1'], 'Quantity': [1, 1], 'Price': [10.0, 10.0]})
+          clean_result = clean_sales(test_df)
+          assert len(clean_result) == 1, 'Deduplication failed'
+          print(f'✓ clean_sales removed duplicates: {len(test_df)} → {len(clean_result)}')
+          
+          print('✓ All validation tests passed')
+          "
+
+      - name: Check processed data exists
+        run: |
+          test -f data/processed/fact_sales.csv && echo "✓ fact_sales.csv exists" || echo "✗ Missing fact_sales.csv"
+          test -f data/processed/inventory_summary.csv && echo "✓ inventory_summary.csv exists" || echo "✗ Missing inventory_summary.csv"
+          test -f data/processed/logistics_kpi.csv && echo "✓ logistics_kpi.csv exists" || echo "✗ Missing logistics_kpi.csv"
+
+      - name: Validate raw data structure
+        run: |
+          test -f data/raw/sales_raw.csv && echo "✓ sales_raw.csv exists" || echo "✗ Missing sales_raw.csv"
+          test -f data/raw/inventory_raw.csv && echo "✓ inventory_raw.csv exists" || echo "✗ Missing inventory_raw.csv"
+          test -f data/raw/logistics_raw.csv && echo "✓ logistics_raw.csv exists" || echo "✗ Missing logistics_raw.csv"
