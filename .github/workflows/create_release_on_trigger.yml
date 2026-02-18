@@ -27,9 +27,22 @@ jobs:
           git tag -a "$TAG" -m "Release $TAG"
           git push auth-origin "$TAG"
 
-      - name: Create GitHub Release and upload asset
-        uses: softprops/action-gh-release@v1
-        with:
-          files: etl_submission.zip
+      - name: Create GitHub Release and upload asset via API
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_UPLOAD_TOKEN }}
+          GHTOKEN: ${{ secrets.GH_UPLOAD_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TAG="v1.0.0-$(date +%s)"
+          RELEASE_PAYLOAD=$(jq -n --arg tag "$TAG" --arg name "ETL submission $TAG" --arg body "Automated ETL submission" '{tag_name: $tag, name: $name, body: $body, draft: false, prerelease: false}')
+          echo "Creating release for tag $TAG"
+          CREATE_RESP=$(curl -s -X POST -H "Authorization: token ${GHTOKEN}" -H "Accept: application/vnd.github+json" https://api.github.com/repos/${REPO}/releases -d "$RELEASE_PAYLOAD")
+          UPLOAD_URL=$(echo "$CREATE_RESP" | jq -r .upload_url)
+          if [ "$UPLOAD_URL" = "null" ] || [ -z "$UPLOAD_URL" ]; then
+            echo "Create release failed: $CREATE_RESP"
+            exit 1
+          fi
+          # strip the template suffix
+          UPLOAD_URL=${UPLOAD_URL%%\{*}
+          echo "Uploading asset to $UPLOAD_URL"
+          curl -s -X POST -H "Authorization: token ${GHTOKEN}" -H "Content-Type: application/zip" --data-binary @etl_submission.zip "${UPLOAD_URL}?name=etl_submission.zip" | jq .
