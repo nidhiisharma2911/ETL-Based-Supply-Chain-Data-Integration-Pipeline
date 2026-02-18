@@ -1,5 +1,11 @@
+import sys
+from pathlib import Path
 import pandas as pd
 import pytest
+
+# Ensure repo root is on sys.path so `src` package imports work in CI
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from src import etl_pipeline as etl
 

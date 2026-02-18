@@ -24,9 +24,9 @@ def extract(path: Path) -> pd.DataFrame:
 
 def _normalize_dates(series: pd.Series) -> pd.Series:
     # Try default parsing, then try dayfirst as fallback
-    s = pd.to_datetime(series.astype(str).replace({"nan": None, "": None}), errors="coerce", infer_datetime_format=True)
+    s = pd.to_datetime(series.astype(str).replace({"nan": None, "": None}), errors="coerce")
     if s.isna().sum() > 0:
-        s2 = pd.to_datetime(series.astype(str), dayfirst=True, errors="coerce", infer_datetime_format=True)
+        s2 = pd.to_datetime(series.astype(str), dayfirst=True, errors="coerce")
         s = s.fillna(s2)
     return s
 
