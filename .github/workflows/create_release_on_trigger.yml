@@ -1,0 +1,22 @@
+name: Create Release on Trigger
+
+on:
+  push:
+    paths:
+      - '.github/release-trigger'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create zip of repository
+        run: zip -r etl_submission.zip . -x "./.git/*" "*/__pycache__/*" "*.pyc"
+
+      - name: Create GitHub Release and upload asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: etl_submission.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_UPLOAD_TOKEN }}
